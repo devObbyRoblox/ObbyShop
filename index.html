@@ -6,8 +6,8 @@
   <title>OBBY SHOP — Донат та Robux у Roblox</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; scroll-behavior: smooth; }
-    body { background: #090c10; color: #ffffff; line-height: 1.6; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+    body { background: #090c10; color: #ffffff; line-height: 1.6; overflow-x: hidden; }
 
     /* Навігація */
     header {
@@ -131,9 +131,9 @@
     .hero p { color: #94a3b8; max-width: 600px; margin: 0 auto 30px; font-size: 16px; }
 
     /* Контейнер */
-.container { max-width: 1100px; margin: 0 auto; padding: 20px; scroll-margin-top: 90px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px; scroll-margin-top: 90px; }
 
-    /* Вітрина */
+    /* Вітрина + анімація появи при прокрутці */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
@@ -149,11 +149,33 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: 0.25s;
+      opacity: 0;
+      transform: translateY(28px) scale(0.97);
+      transition: opacity 0.55s ease, transform 0.55s ease, border-color 0.35s ease, box-shadow 0.35s ease;
     }
-    .card:hover { transform: translateY(-6px); border-color: #00e5ff; box-shadow: 0 15px 35px rgba(0, 229, 255, 0.12); }
-    .card.popular { border-color: #a855f7; background: linear-gradient(180deg, #19132b 0%, #111622 100%); }
-    .card.popular:hover { border-color: #c084fc; box-shadow: 0 15px 35px rgba(168, 85, 247, 0.2); }
+    .card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Підсвічування при наведенні на ПК або при потраплянні в фокус на телефоні */
+    .card:hover, .card.in-focus {
+      transform: translateY(-6px) scale(1.01);
+      border-color: #00e5ff;
+      box-shadow: 0 15px 35px rgba(0, 229, 255, 0.16);
+    }
+    .card.popular {
+      border-color: #a855f7;
+      background: linear-gradient(180deg, #19132b 0%, #111622 100%);
+    }
+    .card.popular:hover, .card.popular.in-focus {
+      border-color: #c084fc;
+      box-shadow: 0 15px 35px rgba(168, 85, 247, 0.28);
+    }
+    /* Миттєвий тактильний відгук при натисканні пальцем */
+    .card:active {
+      transform: scale(0.98);
+    }
 
     .tag {
       position: absolute; top: 16px; right: 16px;
@@ -164,6 +186,10 @@
       width: 56px; height: 56px; background: rgba(255,255,255,0.05);
       border-radius: 14px; display: flex; align-items: center; justify-content: center;
       font-size: 28px; margin-bottom: 18px;
+      transition: transform 0.35s ease;
+    }
+    .card:hover .icon, .card.in-focus .icon {
+      transform: scale(1.12) rotate(-4deg);
     }
     .card h3 { font-size: 22px; margin-bottom: 8px; }
     .desc { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
@@ -179,16 +205,20 @@
       width: 100%; padding: 14px; border: none; border-radius: 12px;
       font-size: 15px; font-weight: 700; cursor: pointer;
       background: linear-gradient(90deg, #00e5ff, #38bdf8); color: #090c10;
-      transition: 0.2s;
+      transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
     }
     .card.popular .btn { background: linear-gradient(90deg, #c084fc, #a855f7); color: #fff; }
-    .btn:hover { opacity: 0.9; transform: scale(0.99); }
+    .btn:hover { opacity: 0.92; }
+    .btn:active { transform: scale(0.95); opacity: 0.85; }
 
     /* Блок інструкції */
     .how-to {
       background: #111622; border: 1px solid #1f293d; border-radius: 20px;
       padding: 35px; margin-bottom: 50px; scroll-margin-top: 90px;
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
     }
+    .how-to.visible { opacity: 1; transform: translateY(0); }
     .how-to h2 { font-size: 24px; margin-bottom: 20px; text-align: center; }
     .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
     .step { background: #0b0f17; padding: 20px; border-radius: 14px; border: 1px solid #1b2333; }
@@ -199,7 +229,8 @@
 
     @media (max-width: 650px) {
       nav { display: none; }
-      .hero h1 { font-size: 30px; }
+      .hero { padding: 45px 16px 30px; }
+      .hero h1 { font-size: 28px; }
     }
   </style>
 </head>
@@ -222,10 +253,10 @@
           <span class="arrow">▼</span>
         </button>
         <div class="lang-menu">
-          <button class="lang-option active" data-lang="uk" onclick="setLanguage('uk')">Українська</button>
-          <button class="lang-option" data-lang="en" onclick="setLanguage('en')">English</button>
-          <button class="lang-option" data-lang="pl" onclick="setLanguage('pl')">Polski</button>
-          <button class="lang-option" data-lang="ru" onclick="setLanguage('ru')">Русский</button>
+          <button class="lang-option active" data-lang="uk" onclick="setLanguage('uk')">🇺🇦 Українська</button>
+          <button class="lang-option" data-lang="en" onclick="setLanguage('en')">🇺🇸 English</button>
+          <button class="lang-option" data-lang="pl" onclick="setLanguage('pl')">🇵🇱 Polski</button>
+          <button class="lang-option" data-lang="ru" onclick="setLanguage('ru')">🌐 Русский</button>
         </div>
       </div>
     </div>
@@ -413,18 +444,16 @@
       }
     };
 
-    // Відкриття/закриття випадаючого списку
+    // Меню мов
     function toggleLangMenu(event) {
       event.stopPropagation();
       document.getElementById('langDropdown').classList.toggle('open');
     }
 
-    // Закриття списку при кліку в будь-яке інше місце
     document.addEventListener('click', function() {
       document.getElementById('langDropdown').classList.remove('open');
     });
 
-    // Зміна мови
     function setLanguage(lang) {
       const data = translations[lang];
       if (!data) return;
@@ -443,13 +472,36 @@
       localStorage.setItem('obby_lang', lang);
     }
 
-    // Завантаження збереженої мови при відкритті сайту
     const savedLang = localStorage.getItem('obby_lang') || 'uk';
     setLanguage(savedLang);
 
+    // Анімація появи та підсвічування при прокрутці
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, index * 100);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.card, .how-to').forEach(el => revealObserver.observe(el));
+
+    // Автоматичне підсвічування картки в центрі екрана на мобільних пристроях
+    if (window.matchMedia('(hover: none)').matches) {
+      const focusObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          entry.target.classList.toggle('in-focus', entry.isIntersecting);
+        });
+      }, { rootMargin: '-28% 0px -28% 0px', threshold: 0.2 });
+
+      document.querySelectorAll('.card').forEach(card => focusObserver.observe(card));
+    }
+
     // Перехід у Telegram бота
     function orderItem(productId) {
-      const botUsername = "TestSiteMy11Bot"; // впишіть сюди юзернейм без @
+      const botUsername = "ЮЗЕРНЕЙМ_ВАШОГО_БОТА"; // впишіть сюди юзернейм без @
       const url = productId 
         ? `https://t.me/${botUsername}?start=${productId}` 
         : `https://t.me/${botUsername}`;
